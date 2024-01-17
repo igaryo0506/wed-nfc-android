@@ -1,5 +1,9 @@
 package com.example.wednfc
 
+import NFCManager
+import android.content.Intent
+import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Bundle
 import android.widget.Space
 import androidx.activity.ComponentActivity
@@ -44,6 +48,14 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+        tag?.let {
+            NFCManager.handleTag(it)
+        }
+    }
 }
 
 @Composable
@@ -86,6 +98,7 @@ fun MainView(modifier: Modifier = Modifier) {
 
 @Composable
 fun ReadScreen() {
+    var nfcData by remember { mutableStateOf<String?>(null) }
     // NFC読み取り用UI
      Box(
         modifier = Modifier.fillMaxSize(),
@@ -95,10 +108,14 @@ fun ReadScreen() {
              horizontalAlignment = Alignment.CenterHorizontally,
              modifier = Modifier.padding(16.dp)
          ) {
-             Text(text = "NFCタグのデータをここに表示")
+             Text(text = nfcData ?: "NFCデータはここに表示されます")
              Spacer(modifier = Modifier.height(16.dp))
              Button(
-                 onClick = {},
+                 onClick = {
+                     NFCManager.read {data ->
+                        nfcData = data
+                     }
+                 },
              ) {
                  Text(text = "読み取る")
              }
@@ -128,9 +145,13 @@ fun WriteScreen() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = {},
+                onClick = {
+                    NFCManager.write(text) {
+                        // 完了時処理
+                    }
+                },
             ) {
-                Text(text = "読み取る")
+                Text(text = "書き込む")
             }
         }
     }
@@ -138,8 +159,15 @@ fun WriteScreen() {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun ReadScreenPreview() {
     WedNfcTheme {
-        MainView()
+        ReadScreen()
+    }
+}
+@Preview(showBackground = true)
+@Composable
+fun WriteScreenPreview() {
+    WedNfcTheme {
+        WriteScreen()
     }
 }
